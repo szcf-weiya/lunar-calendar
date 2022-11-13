@@ -1,3 +1,41 @@
+## 自定义农历生日的 ics 格式日历
+
+基于 <https://github.com/infinet/lunar-calendar> 做了简单修改，添加自定义的农历生日，同时只保留节气与节日。
+
+本人使用 Thunderbird 中的 Events 来管理行程，如果直接添加 <https://raw.github.com/infinet/lunar-calendar/master/chinese_lunar_prev_year_next_year.ics> 作为日历，则每一天都会作为一个 event 添加进去，
+
+![image](https://user-images.githubusercontent.com/13688320/201502310-8fbec142-407f-4e8a-8d52-a99a672c40d6.png)
+
+个人不是很喜欢，同时也没法基于农历设定 event。于是，索性直接修改输出 ics 的程序，添加自定义农历日期（其实就是农历生日），并只保留节日节气，
+
+![image](https://user-images.githubusercontent.com/13688320/201502335-f887954c-207d-43dd-9830-10da929477aa.png)
+
+如果想添加自己的农历日期，可以修改 `lunarcalbase.c` 文件中的
+
+```c
+/* Custom Birthdays */
+static char *CN_BIRTHDAY[] = {
+    "爸爸", "妈妈" // list birthdays you want to be treated as events
+};
+static int CN_BIRTHDAY_DAY[] = {32, 32}; // set the day (1..31) of the birthday
+static int CN_BIRTHDAY_MONTH[] = {13, 13}; // set the month (1..12) of the birthday
+```
+
+修改完毕后，运行 `make`，然后运行
+
+```bash
+./lunarcal 2022 2025 > chinese_lunar_birthdays_22to25.ics
+```
+
+便可以得到未来几年的农历生日日历文件（含节气节日）。
+
+在导入 Thunderbird 中时，在 `Create New Calendar` 仍选择 `On the Network`，只不过需要用 `file://` 来明确具体位置。 
+
+---------------
+
+以下为原 repo <https://github.com/infinet/lunar-calendar> 的 README
+
+
 ## iCalendar格式的农历 节气 及传统节日
 
 iCalendar是一种通用的日历交换格式，很多软件和设备，比如google calendar, apple

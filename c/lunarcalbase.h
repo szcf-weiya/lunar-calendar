@@ -17,6 +17,7 @@ struct lunarcal {
     int month;        /* month in Lunar Calendar */
     int day;          /* day in Lunar Calendar */
     int holiday;      /* index of CN_HOLIDAY, -1 if not a traditional Holiday */
+    int birthday;     /* index of birthday */
     int is_lm;        /* leapmonth? */
 };
 

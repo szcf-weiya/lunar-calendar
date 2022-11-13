@@ -47,6 +47,14 @@ static char *CN_HOLIDAY[] = {
     "端午", "七夕", "中元", "中秋", "重阳", "下元",
 };
 
+/* Custom Birthdays */
+static char *CN_BIRTHDAY[] = {
+    "爸爸", "妈妈" // list birthdays you want to be treated as events
+};
+static int CN_BIRTHDAY_DAY[] = {32, 32}; // set the day (1..31) of the birthday
+static int CN_BIRTHDAY_MONTH[] = {13, 13}; // set the month (1..12) of the day
+static int n_birthday = sizeof(CN_BIRTHDAY_DAY) / sizeof(CN_BIRTHDAY_DAY[0]);
+
 static double newmoons[MAX_NEWMOONS];
 static struct solarterm solarterms[MAX_SOLARTERMS];
 static int nm_before_ws_index;
@@ -294,6 +302,8 @@ int gen_lunar_calendar(struct lunarcal *lcs[], int len, int year)
     /* mark Traditional Chinese holiday */
     mark_holiday(lcs, n);
 
+    /* mark custom birthdays */
+    mark_birthday(lcs, n, n_birthday);
     return n;
 }
 
@@ -348,6 +358,26 @@ void mark_holiday(struct lunarcal *lcs[], int len)
     }
 }
 
+/* mark birthdays */
+void mark_birthday(struct lunarcal *lcs[], int len, int n_birthday)
+{
+    int i;
+    struct lunarcal *lc;
+
+    int j;
+    for (i = 0; i < len; i++) {
+        lc = lcs[i];
+
+        if (lc->is_lm)
+            continue;
+
+        for (int j = 0; j < n_birthday; j++) {
+            if (lc->month == CN_BIRTHDAY_MONTH[j] && lc->day == CN_BIRTHDAY_DAY[j]) {
+                lc->birthday = j;
+            }
+        }
+    }
+}
 
 /*
  * find last newmoon before Winter Solstic and determin the leapmonth
@@ -426,6 +456,7 @@ struct lunarcal *lcalloc(double jd)
         p->month = -1;
         p->day = -1;
         p->holiday = -1;
+        p->birthday = -1;
         p->is_lm = 0;
     }
 
@@ -453,7 +484,7 @@ void print_lunarcal(struct lunarcal *lcs[], int len)
     struct lunarcal *lc;
     struct tm *utc_time;
     time_t t = time(NULL);
-
+    int to_ics = 0;
     utc_time = gmtime(&t);
     memset(utcstamp, 0, BUFSIZE);
     sprintf(utcstamp, "%04d%02d%02dT%02d%02d%02dZ",
@@ -476,24 +507,35 @@ void print_lunarcal(struct lunarcal *lcs[], int len)
         } else {
             sprintf(summary, "%s", CN_DAY[lc->day]);
         }
-
+        to_ics = 0;
         if (lc->solarterm != -1) {
             strcat(summary, " ");
             strcat(summary, CN_SOLARTERM[lc->solarterm]);
+            to_ics = 1;
         }
 
         if (lc->holiday != -1) {
             strcat(summary, " ");
             strcat(summary, CN_HOLIDAY[lc->holiday]);
+            to_ics = 1;
         }
 
-        printf("BEGIN:VEVENT\n"
-               "DTSTAMP:%s\n"
-               "UID:%s-lc@infinet.github.io\n"
-               "DTSTART;VALUE=DATE:%s\n"
-               "DTEND;VALUE=DATE:%s\n"
-               "STATUS:CONFIRMED\n"
-               "SUMMARY:%s\n"
-               "END:VEVENT\n", utcstamp, isodate, dtstart, dtend, summary);
+        if (lc->birthday != -1) {
+            strcat(summary, " ");
+            strcat(summary, CN_BIRTHDAY[lc->birthday]);
+            strcat(summary, "的生日");
+            to_ics = 1;
+        }
+
+        if (to_ics) {
+            printf("BEGIN:VEVENT\n"
+                "DTSTAMP:%s\n"
+                "UID:%s-lc@infinet.github.io\n"
+                "DTSTART;VALUE=DATE:%s\n"
+                "DTEND;VALUE=DATE:%s\n"
+                "STATUS:CONFIRMED\n"
+                "SUMMARY:%s\n"
+                "END:VEVENT\n", utcstamp, isodate, dtstart, dtend, summary);
+        }
      }
 }

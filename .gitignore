@@ -1,0 +1,4 @@
+*.o
+c/chinese_lunar_birthdays_22to25.ics
+c/lunarcal
+c/testastro
